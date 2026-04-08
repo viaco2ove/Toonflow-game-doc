@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POST /game/orchestration - 完整流程图</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 24px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        .header p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .toolbar button {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #cbd5e1;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toolbar button:hover {
+            background: #334155;
+            border-color: #64748b;
+        }
+        .toolbar button.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+        .section {
+            margin-bottom: 48px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3b82f6;
+            display: inline-block;
+        }
+        .flowchart-container {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            padding: 32px;
+            overflow-x: auto;
+        }
+        .flowchart-container.mindmap {
+            display: flex;
+            justify-content: center;
+            min-height: 600px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Mermaid mindmap theme overrides */
+        .mindmap-container .node rect,
+        .mindmap-container .node circle,
+        .mindmap-container .node polygon {
+            stroke: #475569 !important;
+        }
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-size: 13px;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 POST /game/orchestration</h1>
+        <p>AI 故事编排引擎 — 完整请求流程与调用链路</p>
+        <div class="toolbar">
+            <button class="active" onclick="switchView('mindmap')">思维导图</button>
+            <button onclick="switchView('flowchart')">流程图</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Mindmap View -->
+        <div id="mindmap-view" class="section">
+            <div class="section-title">📋 整体架构思维导图</div>
+            <div class="flowchart-container mindmap">
+                <div class="mermaid">
+mindmap
+  root((POST /game/orchestration))
+    入参
+      sessionId
+      worldId
+      chapterId
+      playerContent
+      state
+      messages
+    分支判断
+      有sessionId → 正式模式
+        SessionService
+          orchestrateSessionTurn
+            加载会话数据
+              t_gameSession
+              t_storyWorld
+              t_sessionMessage
+            场景判断
+              pendingChapter
+                构建新章节开场
+              无历史消息
+                构建章节开场
+              轮到用户
+                返回空plan
+              AI编排
+                runNarrativePlan
+      无sessionId → 调试模式
+        加载数据
+          t_storyWorld
+          t_storyChapter
+          normalizeSessionState
+        无playerContent
+          pendingChapter
+            构建新章节开场
+          无消息
+            首次进入
+          轮到用户
+            返回空plan
+          未轮到用户
+            AI编排
+        有playerContent
+          未轮到用户
+            返回409
+          小游戏拦截
+            handleMiniGameTurn
+          章节进度更新
+            applyDebugUserMessageProgress
+          章节判定
+            evaluateDebugRuntimeOutcome
+              failed → 失败信息
+              success
+                有下一章 → 新章节开场
+                无下一章 → 自由剧情
+              continue → AI编排
+    AI编排引擎
+      NarrativeOrchestrator
+        runNarrativePlan
+          加载Prompt配置
+          解析角色列表
+          解析AI模型配置
+          决定payload模式
+          读取章节阶段
+          读取事件上下文
+          规则编排尝试
+            RuleOrchestrator
+              命中规则直接返回
+          构建AI请求
+            systemPrompt
+            userPrompt
+          调用AI模型
+            编排师模型
+          解析AI返回
+            speaker 发言角色
+            motive 发言动机
+            awaitUser 是否等待
+            chapterOutcome
+            memoryHints
+            stateDelta
+        runNarrativeOrchestrator
+          runNarrativePlan
+          SpeakerRouteEngine
+            template or fast or premium
+          生成发言内容
+            角色发言模型
+          记忆管理
+            记忆管理模型
+    游戏引擎
+      ChapterProgressEngine
+        状态机管理
+      ChapterOutcomeEngine
+        章节判定
+      MiniGameController
+        小游戏状态机
+      TriggerEngine
+        条件触发
+    持久化
+      保存状态 → t_gameSession
+      保存消息 → t_sessionMessage
+      快照 → SnapshotService
+      回溯数据
+      记忆刷新
+      角色参数卡
+    返回结果
+      buildOrchestrationPayload
+        state 快照
+        plan
+          role / motive / awaitUser
+          source: ai or rule
+          speakerMode
+                </div>
+            </div>
+        </div>
+
+        <!-- Flowchart View -->
+        <div id="flowchart-view" class="section" style="display:none;">
+            <div class="section-title">🔄 主流程图</div>
+            <div class="flowchart-container">
+                <div class="mermaid">
+flowchart TD
+    START([POST /game/orchestration]) --> PARSE[解析请求参数]
+    PARSE --> CHECK_SESSION{有 sessionId?}
+
+    CHECK_SESSION -->|有| SESSION_MODE[🟢 正式模式]
+    CHECK_SESSION -->|无| DEBUG_MODE[🟡 调试模式]
+
+    %% 正式模式
+    SESSION_MODE --> LOAD_SESSION[加载会话数据<br/>SessionService.orchestrateSessionTurn]
+    LOAD_SESSION --> SESSION_CHECK{场景判断}
+
+    SESSION_CHECK -->|pendingChapter| BUILD_START_1[构建新章节开场<br/>buildChapterStartPlan]
+    SESSION_CHECK -->|无历史消息| BUILD_START_2[构建章节开场]
+    SESSION_CHECK -->|轮到用户| RETURN_EMPTY_1[返回空 plan]
+    SESSION_CHECK -->|正常轮次| AI_PLAN_1
+
+    %% 调试模式 - 无playerContent
+    DEBUG_MODE --> LOAD_DEBUG[加载数据<br/>normalizeSessionState]
+    LOAD_DEBUG --> CHECK_INPUT{有 playerContent?}
+
+    CHECK_INPUT -->|无| DEBUG_NO_INPUT{场景判断}
+    DEBUG_NO_INPUT -->|pendingChapter| BUILD_START_3[构建新章节开场]
+    DEBUG_NO_INPUT -->|无消息| BUILD_START_4[首次进入<br/>buildChapterStartPlan]
+    DEBUG_NO_INPUT -->|轮到用户| RETURN_EMPTY_2[返回空 plan]
+    DEBUG_NO_INPUT -->|正常| AI_PLAN_1
+
+    %% 调试模式 - 有playerContent
+    CHECK_INPUT -->|有| CHECK_TURN{轮到用户?}
+    CHECK_TURN -->|否| RETURN_409[返回 409 冲突]
+    CHECK_TURN -->|是| MINIGAME_CHECK{小游戏拦截?}
+    MINIGAME_CHECK -->|是| RETURN_MINIGAME[返回小游戏结果]
+    MINIGAME_CHECK -->|否| UPDATE_PROGRESS[章节进度更新<br/>applyDebugUserMessageProgress]
+    UPDATE_PROGRESS --> EVALUATE[章节判定<br/>evaluateDebugRuntimeOutcome]
+
+    EVALUATE --> EVAL_RESULT{判定结果}
+    EVAL_RESULT -->|failed| RETURN_FAIL[返回失败信息]
+    EVAL_RESULT -->|success| CHECK_NEXT{有下一章?}
+    EVAL_RESULT -->|continue| AI_PLAN_1
+
+    CHECK_NEXT -->|有| BUILD_NEXT[构建新章节开场]
+    CHECK_NEXT -->|无| FREE_MODE[进入自由剧情]
+
+    %% AI 编排
+    AI_PLAN_1[AI 编排<br/>NarrativeOrchestrator] --> RUN_PLAN[runNarrativePlan]
+    RUN_PLAN --> LOAD_PROMPT[加载Prompt配置]
+    LOAD_PROMPT --> PARSE_ROLES[解析角色列表]
+    PARSE_ROLES --> RESOLVE_MODEL[解析AI模型配置]
+    RESOLVE_MODEL --> READ_PHASE[读取章节阶段]
+    READ_PHASE --> READ_EVENT[读取事件上下文]
+    READ_EVENT --> RULE_CHECK{规则编排?}
+
+    RULE_CHECK -->|命中| RETURN_RULE[返回规则 plan<br/>source: rule]
+    RULE_CHECK -->|未命中| BUILD_AI_REQ[构建AI请求]
+    BUILD_AI_REQ --> CALL_AI_1[调用AI模型<br/>编排师]
+    CALL_AI_1 --> PARSE_AI[解析AI返回<br/>speaker/motive/awaitUser]
+
+    PARSE_AI --> CHECK_SPEAKER{角色是AI?}
+    CHECK_SPEAKER -->|否| PERSIST[持久化结果]
+    CHECK_SPEAKER -->|是| SPEAKER_ROUTE[SpeakerRouteEngine<br/>决定发言模式]
+
+    SPEAKER_ROUTE --> GEN_CONTENT[生成发言内容<br/>角色发言模型]
+    GEN_CONTENT --> MEMORY_CHECK{需要记忆刷新?}
+    MEMORY_CHECK -->|是| RUN_MEMORY[runStoryMemoryManager<br/>记忆管理模型]
+    MEMORY_CHECK -->|否| PERSIST
+    RUN_MEMORY --> PERSIST
+
+    %% 持久化
+    PERSIST[持久化] --> SAVE_STATE[保存状态 → t_gameSession]
+    SAVE_STATE --> SAVE_MSG[保存消息 → t_sessionMessage]
+    SAVE_MSG --> SAVE_SNAPSHOT[快照 → SnapshotService]
+    SAVE_SNAPSHOT --> SAVE_REVISIT[回溯数据]
+    SAVE_REVISIT --> SAVE_MEMORY[记忆刷新]
+    SAVE_MEMORY --> RETURN[buildOrchestrationPayload]
+
+    %% 样式
+    style START fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style RETURN fill:#22c55e,stroke:#16a34a,color:#fff
+    style RETURN_EMPTY_1 fill:#94a3b8,stroke:#64748b,color:#fff
+    style RETURN_EMPTY_2 fill:#94a3b8,stroke:#64748b,color:#fff
+    style RETURN_409 fill:#ef4444,stroke:#dc2626,color:#fff
+    style RETURN_FAIL fill:#ef4444,stroke:#dc2626,color:#fff
+    style RETURN_MINIGAME fill:#f59e0b,stroke:#d97706,color:#fff
+    style RETURN_RULE fill:#8b5cf6,stroke:#7c3aed,color:#fff
+
+    style SESSION_MODE fill:#0ea5e9,stroke:#0284c7,color:#fff
+    style DEBUG_MODE fill:#f59e0b,stroke:#d97706,color:#fff
+
+    style CALL_AI_1 fill:#ec4899,stroke:#db2777,color:#fff
+    style GEN_CONTENT fill:#ec4899,stroke:#db2777,color:#fff
+    style RUN_MEMORY fill:#ec4899,stroke:#db2777,color:#fff
+
+    style BUILD_START_1 fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style BUILD_START_2 fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style BUILD_START_3 fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style BUILD_START_4 fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style BUILD_NEXT fill:#8b5cf6,stroke:#7c3aed,color:#fff
+
+    style FREE_MODE fill:#06b6d4,stroke:#0891b2,color:#fff
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 32px;">🤖 AI 编排引擎详情</div>
+            <div class="flowchart-container">
+                <div class="mermaid">
+flowchart LR
+    subgraph AI编排流程
+        direction TB
+        PLAN[runNarrativePlan] --> BUILD_SYS[构建 System Prompt<br/>buildOrchestratorSystemPrompt]
+        BUILD_SYS --> BUILD_USR[构建 User Prompt<br/>buildOrchestratorUserPrompt]
+        BUILD_USR --> INVOKE[AI 调用<br/>u.ai.text.invoke]
+        INVOKE --> RESULT[解析结果]
+    end
+
+    subgraph 返回字段
+        RESULT --> S[speaker<br/>发言角色]
+        RESULT --> M[motive<br/>发言动机]
+        RESULT --> A[awaitUser<br/>是否等待用户]
+        RESULT --> CO[chapterOutcome<br/>章节结果]
+        RESULT --> MH[memoryHints<br/>记忆提示]
+        RESULT --> SD[stateDelta<br/>状态变化]
+        RESULT --> EA[eventAdjustMode<br/>事件调整]
+    end
+
+    subgraph 发言路由
+        ROUTE[SpeakerRouteEngine] --> T[template<br/>模板模式]
+        ROUTE --> F[fast<br/>快速模式]
+        ROUTE --> P[premium<br/>高级模式]
+    end
+
+    style PLAN fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style INVOKE fill:#ec4899,stroke:#db2777,color:#fff
+    style RESULT fill:#22c55e,stroke:#16a34a,color:#fff
+    style ROUTE fill:#f59e0b,stroke:#d97706,color:#fff
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 32px;">💾 持久化流程</div>
+            <div class="flowchart-container">
+                <div class="mermaid">
+flowchart TD
+    ORCH[编排完成] --> SAVE[保存数据]
+    SAVE --> S1[保存状态<br/>t_gameSession.stateJson]
+    SAVE --> S2[保存消息<br/>t_sessionMessage]
+    SAVE --> S3[快照<br/>SnapshotService.<br/>persistSnapshotIfNeeded]
+    SAVE --> S4[回溯数据<br/>persistSessionMessageRevisitData]
+    SAVE --> S5[记忆刷新<br/>scheduleSessionMemoryRefresh]
+    SAVE --> S6[角色参数卡<br/>scheduleSessionRoleParameterCardRefresh]
+
+    S1 & S2 & S3 & S4 & S5 & S6 --> BUILD[buildOrchestrationPayload]
+    BUILD --> RESP[返回响应]
+
+    style ORCH fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style RESP fill:#22c55e,stroke:#16a34a,color:#fff
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="section">
+            <div class="section-title">📖 图例说明</div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#3b82f6;"></div>
+                    <span>入口 / 核心节点</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#0ea5e9;"></div>
+                    <span>正式模式路径</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#f59e0b;"></div>
+                    <span>调试模式 / 路由判定</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#8b5cf6;"></div>
+                    <span>章节开场 / 规则命中</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#ec4899;"></div>
+                    <span>AI 模型调用</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#22c55e;"></div>
+                    <span>成功返回 / 结果输出</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#ef4444;"></div>
+                    <span>错误 / 失败返回</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#94a3b8;"></div>
+                    <span>空返回 / 跳过</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                fontSize: '14px',
+                fontFamily: 'Microsoft YaHei, sans-serif',
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#f1f5f9',
+                primaryBorderColor: '#1d4ed8',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#0f172a',
+                background: '#1e293b',
+                mainBkg: '#1e293b',
+                nodeBorder: '#475569',
+                clusterBkg: '#0f172a',
+                clusterBorder: '#334155',
+                titleColor: '#f8fafc',
+                edgeLabelBackground: '#1e293b',
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 15,
+                nodeSpacing: 30,
+                rankSpacing: 50,
+            },
+            mindmap: {
+                padding: 20,
+            }
+        });
+    </script>
+
+    <script>
+        function switchView(view) {
+            document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'mindmap') {
+                document.getElementById('mindmap-view').style.display = 'block';
+                document.getElementById('flowchart-view').style.display = 'none';
+            } else {
+                document.getElementById('mindmap-view').style.display = 'none';
+                document.getElementById('flowchart-view').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

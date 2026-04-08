@@ -1,0 +1,182 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '14px', 'fontFamily': 'Microsoft YaHei, sans-serif'}}}%%
+
+mindmap
+  root((POST /game/orchestration))
+    入参
+      sessionId
+      worldId
+      chapterId
+      playerContent
+      state
+      messages
+    分支判断
+      有sessionId
+        SessionService
+          orchestrateSessionTurn
+            加载会话数据
+              t_gameSession
+              t_storyWorld
+              t_sessionMessage
+            场景判断
+              pendingChapter
+                ::icon(fa fa-forward)
+                构建新章节开场
+                  buildChapterStartPlan
+              无历史消息
+                ::icon(fa fa-play)
+                构建章节开场
+              轮到用户
+                ::icon(fa fa-user)
+                返回空plan
+              AI编排
+                ::icon(fa fa-robot)
+                runNarrativePlan
+      无sessionId调试模式
+        加载数据
+          t_storyWorld
+          t_storyChapter
+          normalizeSessionState
+        无playerContent
+          pendingChapter
+            构建新章节开场
+          无消息
+            首次进入
+              buildChapterStartPlan
+          轮到用户
+            返回空plan
+          未轮到用户
+            AI编排
+              runNarrativePlan
+        有playerContent
+          未轮到用户
+            返回409
+          小游戏拦截
+            handleMiniGameTurn
+              intercepted
+                返回小游戏结果
+          章节进度更新
+            applyDebugUserMessageProgress
+          章节判定
+            evaluateDebugRuntimeOutcome
+              failed
+                返回失败信息
+              success
+                有下一章
+                  构建新章节开场
+                无下一章
+                  进入自由剧情
+              continue
+                AI编排
+                  runNarrativePlan
+    AI编排引擎
+      NarrativeOrchestrator
+        runNarrativePlan
+          加载Prompt配置
+          解析角色列表
+            runtimeStoryRoles
+          解析AI模型配置
+            resolveTextStageModel
+          决定payload模式
+            compact or advanced
+          读取章节阶段
+            readCurrentChapterPhase
+          读取事件上下文
+            readCurrentRuntimeEventContext
+          规则编排尝试
+            RuleOrchestrator
+              resolveRuleNarrativePlan
+              命中规则直接返回
+          构建AI请求
+            systemPrompt
+              buildOrchestratorSystemPrompt
+            userPrompt
+              buildOrchestratorUserPrompt
+          调用AI模型
+            u.ai.text.invoke
+              usageType: 编排师
+          解析AI返回
+            speaker 发言角色
+            motive 发言动机
+            awaitUser 是否等待用户
+            nextRole 下一角色
+            chapterOutcome 章节结果
+            memoryHints 记忆提示
+            stateDelta 状态变化
+            eventAdjustMode 事件调整
+        runNarrativeOrchestrator
+          runNarrativePlan
+          角色不是玩家且有motive
+            SpeakerRouteEngine
+              resolveSpeakerModeDecision
+                template or fast or premium
+            生成发言内容
+              runStorySpeakerContent
+                调用角色发言模型
+            判断是否触发记忆刷新
+              runStoryMemoryManager
+      记忆管理
+        runStoryMemoryManager
+          调用AI模型
+            usageType: 记忆管理
+          返回
+            summary 记忆摘要
+            facts 记忆事实
+            tags 记忆标签
+    游戏引擎
+      ChapterProgressEngine
+        initializeChapterProgressForState
+        syncChapterProgressWithRuntime
+        markCurrentUserNodeCompleted
+        recordChapterProgressSignals
+        advanceChapterProgressAfterNarrative
+      ChapterOutcomeEngine
+        evaluateChapterOutcome
+      MiniGameController
+        handleMiniGameTurn
+          状态机: idle到finished
+          返回拦截结果
+      TriggerEngine
+        runTriggerEngine
+      TaskProgressEngine
+        runTaskProgressEngine
+    持久化
+      保存状态
+        t_gameSession.stateJson
+      保存消息
+        t_sessionMessage
+      快照
+        SnapshotService
+          persistSnapshotIfNeeded
+      回溯数据
+        persistSessionMessageRevisitData
+      记忆刷新
+        scheduleSessionMemoryRefresh
+      角色参数卡
+        scheduleSessionRoleParameterCardRefresh
+    返回结果
+      buildOrchestrationPayload
+        chapterId
+        chapterTitle
+        state 快照
+        currentEventDigest
+        eventDigestWindow
+        eventDigestWindowText
+        endDialog
+        endDialogDetail
+        plan
+          role
+          roleType
+          motive
+          awaitUser
+          nextRole
+          nextRoleType
+          source: ai or fallback or rule
+          eventType
+          presetContent
+          eventAdjustMode
+          eventKind
+          eventSummary
+          eventFacts
+          eventStatus
+          speakerMode
+          orchestratorRuntime

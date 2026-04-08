@@ -1,0 +1,57 @@
+flowchart TB
+    A["请求入口
+    /game/orchestration"] --> B{"有 sessionId?"}
+
+    B -->|有| C["正式模式
+    SessionService"]
+    B -->|无| D["调试模式
+    前端传 state"]
+
+    C --> E{"场景判断"}
+    D --> F{"场景判断"}
+
+    E -->|新章节| G[章节开场]
+    E -->|轮到用户| H[返回空 plan]
+    E -->|AI回合| I[AI编排]
+
+    F -->|新章节| G
+    F -->|轮到用户| H
+    F -->|AI回合| I
+
+    I --> J["NarrativeOrchestrator
+    编排师模型"]
+    J --> K{"规则命中?"}
+
+    K -->|是| L["规则直接返回
+    不调AI"]
+    K -->|否| M["调用AI模型
+    决定谁发言"]
+
+    M --> N{"发言角色是AI?"}
+    N -->|否| O[持久化结果]
+    N -->|是| P["生成发言内容
+    角色模型"]
+
+    P --> Q{"需要压缩记忆?"}
+    Q -->|是| R["记忆管理模型
+    压缩对话"]
+    Q -->|否| O
+    R --> O
+
+    O --> S["保存到数据库
+    状态/消息/快照"]
+    S --> T["返回响应
+    plan + state"]
+
+    G --> T
+    H --> T
+    L --> T
+
+    style A fill:#e94560,color:#fff
+    style J fill:#ff6b6b,color:#fff
+    style M fill:#ff6b6b,color:#fff
+    style P fill:#ff6b6b,color:#fff
+    style R fill:#ff6b6b,color:#fff
+    style T fill:#00d9ff,color:#000
+    style C fill:#00bf63,color:#fff
+    style D fill:#f9a825,color:#000

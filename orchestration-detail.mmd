@@ -1,0 +1,236 @@
+flowchart TB
+    subgraph 入口
+        A["POST /game/orchestration
+        入参: sessionId, worldId, chapterId,
+              playerContent, state, messages"]
+    end
+
+    A --> B{"sessionId 存在?
+    String(sessionId).trim()"}
+
+    %% ==================== 正式模式 ====================
+    B -->|有| C["正式模式
+    orchestrateSessionTurn(sessionId)"]
+
+    C --> C1["加载会话数据
+    t_gameSession, t_storyWorld, t_sessionMessage"]
+
+    C1 --> C2{"场景判断
+    SessionService 内部逻辑"}
+
+    C2 -->|新章节 pending| C3["buildChapterStartPlan
+    构建章节开场"]
+    C2 -->|轮到用户| C4["返回 null plan
+    canPlayerSpeakNow() = true"]
+    C2 -->|AI回合| C5["runNarrativePlan()
+    调用编排器"]
+
+    %% ==================== 调试模式 ====================
+    B -->|无| D["调试模式
+    需要 userId, worldId"]
+
+    D --> D1{"playerContent 存在?
+    String(playerContent).trim()"}
+
+    D1 -->|无输入| D2{"getPendingDebugChapterId()
+    有待处理章节?"}
+
+    D2 -->|有| D3["加载下一章
+    db('t_storyChapter')
+    buildChapterStartPlan()"]
+
+    D2 -->|无| D4{"messages.length === 0?
+    首次进入?"}
+
+    D4 -->|是| D5["buildChapterStartPlan()
+    生成章节开场"]
+
+    D4 -->|否| D6{"canPlayerSpeakNow(state, world)
+    轮到用户?"}
+
+    D6 -->|是| D7["返回 null plan
+    等待用户输入"]
+    D6 -->|否| D8["runNarrativePlan()
+    AI继续编排"]
+
+    %% ==================== 有 playerContent ====================
+    D1 -->|有输入| E{"canPlayerSpeakNow()
+    轮到用户?"}
+
+    E -->|否| E1["返回 409
+    '当前还没轮到用户发言'"]
+
+    E -->|是| E2["handleMiniGameTurn()
+    小游戏拦截检测"]
+
+    E2 --> E3{"intercepted?
+    小游戏命中?"}
+
+    E3 -->|是| E4["返回小游戏结果
+    presetMessage + plan"]
+
+    E3 -->|否| E5["applyDebugUserMessageProgress()
+    更新章节进度状态"]
+
+    E5 --> E6["evaluateDebugRuntimeOutcome()
+    章节结果判定"]
+
+    E6 --> E7{"判定结果
+    result"}
+
+    E7 -->|failed| E8["返回失败信息
+    endDialog: '已失败'"]
+
+    E7 -->|success| E9["resolveNextChapter()
+    查找下一章"]
+
+    E9 --> E10{"有下一章?"}
+    E10 -->|有| D3
+    E10 -->|无| E11["进入自由剧情
+    state.debugFreePlot = {active: true}"]
+
+    E7 -->|continue| E12["runNarrativePlan()
+    继续AI编排"]
+
+    %% ==================== runNarrativePlan 详情 ====================
+    subgraph AI编排引擎
+        F["runNarrativePlan({
+        userId, world, chapter, state,
+        recentMessages, playerMessage,
+        maxRetries, allowControlHints,
+        allowStateDelta
+        })"]
+
+        F --> F1["加载Prompt配置
+        world.orchestratorPrompt"]
+
+        F --> F2["解析角色列表
+        normalizeRolePair()
+        runtimeStoryRoles"]
+
+        F --> F3["解析AI模型配置
+        resolveTextStageModel()
+        world.storyOrchestratorModel"]
+
+        F --> F4["读取章节阶段
+        readCurrentChapterPhase(state)"]
+
+        F --> F5["读取事件上下文
+        readCurrentRuntimeEventContext()"]
+
+        F --> F6{"RuleOrchestrator
+        resolveRuleNarrativePlan()
+        规则命中?"}
+
+        F6 -->|命中| F7["返回规则 plan
+        source: 'rule'
+        跳过AI调用"]
+
+        F6 -->|未命中| F8["构建AI请求
+        buildOrchestratorSystemPrompt()
+        buildOrchestratorUserPrompt()"]
+
+        F8 --> F9["调用AI模型
+        u.ai.text.invoke()
+        usageType: '编排师'"]
+
+        F9 --> F10["解析返回
+        speaker, motive, awaitUser,
+        nextRole, chapterOutcome,
+        memoryHints, stateDelta"]
+
+        F10 --> F11{"角色是AI?
+        roleType !== 'player'"}
+
+        F11 -->|是| F12["SpeakerRouteEngine
+        resolveSpeakerModeDecision()
+        → template/fast/premium"]
+
+        F12 --> F13["runStorySpeakerContent()
+        生成发言内容
+        调用角色发言模型"]
+
+        F13 --> F14{"需要记忆刷新?
+        triggerMemoryAgent"}
+
+        F14 -->|是| F15["runStoryMemoryManager()
+        压缩对话记忆
+        返回 summary, facts, tags"]
+
+        F14 -->|否| F16["返回编排结果"]
+        F15 --> F16
+        F11 -->|否| F16
+        F7 --> F16
+    end
+
+    %% ==================== 持久化 ====================
+    subgraph 持久化
+        G["applyOrchestratorResultToState()
+        应用编排结果到状态"]
+
+        G --> G1["applyNarrativeMemoryHintsToState()
+        应用记忆提示"]
+
+        G1 --> G2{"triggerMemoryAgent?
+        需要后台刷新?"}
+
+        G2 -->|是| G3["triggerStoryMemoryRefreshInBackground()
+        异步刷新记忆"]
+
+        G2 -->|否| G4["applyPlanTurnState()
+        设置轮次状态
+        canPlayerSpeak, expectedRole"]
+
+        G3 --> G4
+    end
+
+    %% ==================== 返回 ====================
+    subgraph 返回结果
+        H["buildOrchestrationPayload({
+        userId, worldId, state,
+        chapterId, chapterTitle,
+        endDialog, plan, messages
+        })"]
+
+        H --> H1["返回响应
+        {
+          chapterId,
+          chapterTitle,
+          state,  // 快照
+          currentEventDigest,
+          eventDigestWindow,
+          endDialog,
+          plan: {
+            role, roleType, motive,
+            awaitUser, nextRole,
+            source,  // 'ai' | 'rule' | 'fallback'
+            eventType, presetContent,
+            speakerMode, planSource
+          }
+        }"]
+    end
+
+    %% 连接
+    C3 --> G
+    C5 --> F
+    D3 --> G
+    D5 --> G
+    D8 --> F
+    E4 --> H
+    E8 --> H
+    E11 --> H
+    E12 --> F
+    F16 --> G
+    G4 --> H
+
+    %% 样式
+    style A fill:#e94560,color:#fff
+    style C fill:#00bf63,color:#fff
+    style D fill:#f9a825,color:#000
+    style F fill:#ff6b6b,color:#fff
+    style F9 fill:#ff6b6b,color:#fff
+    style F13 fill:#ff6b6b,color:#fff
+    style F15 fill:#ff6b6b,color:#fff
+    style H fill:#00d9ff,color:#000
+    style E1 fill:#ef4444,color:#fff
+    style E8 fill:#ef4444,color:#fff

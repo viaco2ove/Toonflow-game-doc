@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-04-06T13:01:44.462Z",
+  "platform": "android",
+  "passed": 27,
+  "failed": 1,
+  "results": [
+    {
+      "name": "TC-A01 登录",
+      "success": true,
+      "detail": "获取到 token: Bearer eyJhbGciOiJIU..."
+    },
+    {
+      "name": "TC-A02 获取世界",
+      "success": true,
+      "detail": "找到 3 个世界，使用: 2"
+    },
+    {
+      "name": "TC-A02 世界数据模型",
+      "success": true,
+      "detail": "必要字段完整"
+    },
+    {
+      "name": "TC-A02 世界设置",
+      "success": true,
+      "detail": "包含 settings 字段"
+    },
+    {
+      "name": "TC-A03 initDebug",
+      "success": true,
+      "detail": "返回 0 条消息, state 有 debugRuntimeKey: true"
+    },
+    {
+      "name": "TC-A03 状态字段",
+      "success": true,
+      "detail": "包含 state 字段"
+    },
+    {
+      "name": "TC-A03 事件摘要",
+      "success": true,
+      "detail": "currentEventDigest: true, eventDigestWindow: true"
+    },
+    {
+      "name": "TC-A03 章节进度",
+      "success": true,
+      "detail": "eventIndex=1, eventKind=ending"
+    },
+    {
+      "name": "TC-A04 debugStep #0 (开场白)",
+      "success": true,
+      "detail": "返回 1 条消息"
+    },
+    {
+      "name": "TC-A04 开场白标记",
+      "success": true,
+      "detail": "找到 eventType=on_opening"
+    },
+    {
+      "name": "TC-A04 消息数据模型",
+      "success": true,
+      "detail": "必要字段完整"
+    },
+    {
+      "name": "TC-A04 轮次状态",
+      "success": true,
+      "detail": "canPlayerSpeak=false, expectedRoleType=narrator"
+    },
+    {
+      "name": "TC-A05 debugStep #1",
+      "success": false,
+      "detail": "canPlayerSpeak=false，无法发言"
+    },
+    {
+      "name": "TC-A06 debugStep #2 (旁白)",
+      "success": true,
+      "detail": "返回 1 条消息"
+    },
+    {
+      "name": "TC-A06 旁白消息",
+      "success": true,
+      "detail": "找到旁白消息: (细碎的星尘顺着裂隙边缘缓缓飘落，虚空里漾开柔和的微光涟漪)"
+    },
+    {
+      "name": "TC-A08 回溯标记",
+      "success": true,
+      "detail": "前 1 条消息支持回溯，最后一条不支持"
+    },
+    {
+      "name": "TC-A09 回溯请求",
+      "success": true,
+      "detail": "回溯到消息索引: 1"
+    },
+    {
+      "name": "TC-A10 回溯验证",
+      "success": true,
+      "detail": "回溯成功，状态有效"
+    },
+    {
+      "name": "TC-A13 事件索引",
+      "success": true,
+      "detail": "eventIndex=1"
+    },
+    {
+      "name": "TC-A13 事件类型",
+      "success": true,
+      "detail": "eventKind=ending"
+    },
+    {
+      "name": "TC-A13 事件摘要",
+      "success": true,
+      "detail": "eventSummary=\"结束条件：用户输入了名称 性别，年龄(用户输入不符合要求五次...\""
+    },
+    {
+      "name": "TC-A15 当前事件摘要",
+      "success": true,
+      "detail": "index=1, kind=ending"
+    },
+    {
+      "name": "TC-A15 事件窗口",
+      "success": true,
+      "detail": "包含 1 个事件摘要"
+    },
+    {
+      "name": "TC-A15 事件摘要数据模型",
+      "success": true,
+      "detail": "必要字段完整"
+    },
+    {
+      "name": "TC-A15 事件摘要文本",
+      "success": true,
+      "detail": "文本长度: 72"
+    },
+    {
+      "name": "TC-A16 canPlayerSpeak",
+      "success": true,
+      "detail": "canPlayerSpeak=true"
+    },
+    {
+      "name": "TC-A16 expectedRoleType",
+      "success": true,
+      "detail": "expectedRoleType=player"
+    },
+    {
+      "name": "TC-A16 expectedRole",
+      "success": true,
+      "detail": "expectedRole=用户"
+    }
+  ]
+}
