@@ -1,0 +1,13 @@
+web_project: /mnt/d/users/viaco/tools/Toonflow-game/Toonflow-game-web
+web_project_windows: D:\Users\viaco\tools\Toonflow-game\Toonflow-game-web
+service_project: /mnt/d/users/viaco/tools/Toonflow-game/toonflow-game-app
+service_project_windows: D:\Users\viaco\tools\Toonflow-game\toonflow-game-app
+voice_project_windows: D:\Users\viaco\tools\voice
+voice_project: /mnt/d/users/viaco/tools/voice
+android_project: /mnt/d/users/viaco/tools/Toonflow-game/Toonflow-game-android
+android_project_windows: D:\Users\viaco\tools\Toonflow-game\Toonflow-game-android
+vedio_web_project: /mnt/d/users/viaco/tools/Toonflow-game/Toonflow-vedio-web
+vedio_web_project_windows: D:\Users\viaco\tools\Toonflow-game\Toonflow-vedio-web
+notes:
+  - 前端源码在 web_project；当前仓库 {service_project}scripts/web/index.html 为构建产物文件
+updated_at: 2026-03-15
