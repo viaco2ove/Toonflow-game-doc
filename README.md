@@ -4,6 +4,14 @@
 它的前身明显是 AI 视频生产工具(Toonflow)：早期结构里有小说、剧本、分镜、图片、视频、语音等模块。但现在核心体验已经转向 AI 故事：创建世界、设定角色、编写章节、进入会话、多角色对话、状态记忆、事件推进、小游戏和调试回溯。
 "Toonflow Game"
 
+## github url
+https://github.com/topics/toonflow-game
+https://github.com/viaco2ove/Toonflow-game.git
+https://github.com/viaco2ove/Toonflow-game-vedio-web.git
+https://github.com/viaco2ove/Toonflow-game-web.git
+https://github.com/viaco2ove/Toonflow-game-android.git
+
+
 ## 当前 AI 故事的特点
 
 它不是普通聊天机器人，而是更接近“可编辑的 AI 剧情引擎”。用户可以先创建一个故事世界，再配置主角、旁白、NPC、章节内容、开场白、结局条件、角色头像和声音。进入游玩后，AI 会根据章节、事件、记忆和用户输入继续推进剧情。
