@@ -192,12 +192,12 @@ async function main() {
     log('debugStep #1 (旁白)', false, e.message);
   }
 
-  // ========== 5. 玩家输入，推进剧情 ==========
-  console.log('\n--- 5. 玩家输入推进剧情 ---');
+  // ========== 5. 用户输入，推进剧情 ==========
+  console.log('\n--- 5. 用户输入推进剧情 ---');
   let step2State = step1State;
   let step2Messages = step1Messages;
   
-  // 检查是否可以玩家发言
+  // 检查是否可以用户发言
   const canSpeak = step1State?.turnState?.canPlayerSpeak;
   console.log('  canPlayerSpeak:', canSpeak);
   
@@ -215,7 +215,7 @@ async function main() {
         const d = stepRes.data.data;
         step2State = d.state;
         step2Messages = d.messages || [];
-        log('debugStep #2 (玩家)', true, `返回 ${step2Messages.length} 条消息`);
+        log('debugStep #2 (用户)', true, `返回 ${step2Messages.length} 条消息`);
         
         // 检查消息索引
         if (step2Messages.length > 0) {
@@ -224,13 +224,13 @@ async function main() {
           });
         }
       } else {
-        log('debugStep #2 (玩家)', false, JSON.stringify(stepRes.data));
+        log('debugStep #2 (用户)', false, JSON.stringify(stepRes.data));
       }
     } catch (e) {
-      log('debugStep #2 (玩家)', false, e.message);
+      log('debugStep #2 (用户)', false, e.message);
     }
   } else {
-    log('debugStep #2 (玩家)', false, 'canPlayerSpeak=false，无法发言');
+    log('debugStep #2 (用户)', false, 'canPlayerSpeak=false，无法发言');
   }
 
   // ========== 6. 再次推进（让旁白响应） ==========
@@ -238,7 +238,7 @@ async function main() {
   let step3State = step2State;
   let step3Messages = step2Messages;
   
-  // 检查是否可以玩家发言，如果不能则需要旁白继续
+  // 检查是否可以用户发言，如果不能则需要旁白继续
   const canSpeak2 = step2State?.turnState?.canPlayerSpeak;
   console.log('  canPlayerSpeak:', canSpeak2);
   

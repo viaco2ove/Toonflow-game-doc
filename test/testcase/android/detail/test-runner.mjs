@@ -262,8 +262,8 @@ async function main() {
     log('TC-A04 introduction', false, e.message);
   }
 
-  // ========== TC-A05: 玩家输入推进剧情 ==========
-  console.log('\n--- TC-A05: 玩家输入推进剧情 ---');
+  // ========== TC-A05: 用户输入推进剧情 ==========
+  console.log('\n--- TC-A05: 用户输入推进剧情 ---');
   let step1State = step0State;
   let step1Messages = [...step0Messages];
   
@@ -282,7 +282,7 @@ async function main() {
         const d = stepRes.data.data;
         step1State = d.state;
         step1Messages = [...step1Messages, ...(d.messages || [])];
-        log('TC-A05 debugStep #1 (玩家)', true, `返回 ${d.messages?.length || 0} 条消息`);
+        log('TC-A05 debugStep #1 (用户)', true, `返回 ${d.messages?.length || 0} 条消息`);
         
         // 验证事件索引递增
         const cp0 = parseChapterProgress(step0State);
@@ -293,10 +293,10 @@ async function main() {
             `${cp0.eventIndex} -> ${cp1.eventIndex}`);
         }
         
-        // 验证玩家消息
+        // 验证用户消息
         const playerMsg = d.messages?.find(m => m.eventType === 'on_message');
-        log('TC-A05 玩家消息', !!playerMsg, 
-          playerMsg ? `找到玩家消息: ${playerMsg.content.substring(0, 30)}` : '未找到玩家消息');
+        log('TC-A05 用户消息', !!playerMsg, 
+          playerMsg ? `找到用户消息: ${playerMsg.content.substring(0, 30)}` : '未找到用户消息');
       } else {
         log('TC-A05 debugStep #1', false, JSON.stringify(stepRes.data));
       }

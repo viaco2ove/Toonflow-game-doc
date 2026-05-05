@@ -67,7 +67,7 @@ POST /game/saveWorld
     "worldType": "xianxia",
     "powerSystem": "修仙等级制"
   },
-  "playerRole": {                  // 玩家角色
+  "playerRole": {                  // 用户角色
     "id": "player",
     "name": "主角",
     "roleType": "player",

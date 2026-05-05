@@ -92,7 +92,7 @@ Request → logger (morgan) → cors → express.json() (100MB limit)
 
 - **StoryWorld**：故事世界容器，包含世界观设定、角色定义、章节列表
 - **Chapter**：章节，包含内容、任务、触发器、进入/完成条件
-- **Session**：会话，玩家与 AI 的一次完整互动
+- **Session**：会话，用户与 AI 的一次完整互动
 - **RuntimeState**：运行时状态（核心数据结构），包含 player/npcs/vars/flags/chapterProgress
 
 ### 事件类型 (EventKind)

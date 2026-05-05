@@ -30,7 +30,7 @@
 | TC-A04 开场白标记 | ✅ 通过 | 找到 eventType=on_opening |
 | TC-A04 消息数据模型 | ✅ 通过 | 必要字段完整 |
 | TC-A04 轮次状态 | ✅ 通过 | canPlayerSpeak=false, expectedRoleType=narrator |
-| TC-A05 玩家输入 | ❌ 失败 | canPlayerSpeak=false（正常流程） |
+| TC-A05 用户输入 | ❌ 失败 | canPlayerSpeak=false（正常流程） |
 | TC-A06 旁白发言 | ✅ 通过 | 返回 1 条消息 |
 | TC-A06 旁白消息 | ✅ 通过 | 找到旁白消息 |
 | TC-A08 回溯标记 | ✅ 通过 | 前 1 条消息支持回溯 |
@@ -87,7 +87,7 @@ chapterProgress: {
 - debugRuntimeKey 的权限验证有问题
 - 需要检查 `revisitMessage` 接口的权限逻辑
 
-#### 3. TC-A05 玩家输入失败
+#### 3. TC-A05 用户输入失败
 **说明**: 这是正常的游戏流程，不是错误
 - 开场白后需要旁白继续发言
 - 然后 canPlayerSpeak 才会变为 true

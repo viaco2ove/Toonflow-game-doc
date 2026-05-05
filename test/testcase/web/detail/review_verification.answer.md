@@ -14,7 +14,7 @@
 | TC-002 initDebug | ✅ 通过 | 返回 debugRuntimeKey |
 | TC-003 开场白 | ✅ 通过 | eventType=on_opening |
 | TC-004 旁白发言 | ✅ 通过 | canPlayerSpeak 变为 true |
-| TC-005 玩家发言 | ✅ 通过 | 玩家可以发言 |
+| TC-005 用户发言 | ✅ 通过 | 用户可以发言 |
 | TC-006 章节进度 | ❌ 失败 | eventIndex=undefined |
 | TC-007 回溯功能 | ❌ 失败 | canRevisit=false |
 | TC-008 编排日志 | ❌ 失败 | 无日志记录 |
@@ -194,8 +194,8 @@ initializeChapterProgressForState(state, chapter);
 ✅ debugStep #1 (旁白): 返回 1 条消息
   turnState: { canPlayerSpeak: true, expectedRoleType: 'player' }
 
---- 5. 玩家输入推进剧情 ---
-✅ debugStep #2 (玩家): 返回 1 条消息
+--- 5. 用户输入推进剧情 ---
+✅ debugStep #2 (用户): 返回 1 条消息
 
 --- 6. 再次推进（旁白响应）---
 ✅ debugStep #3 (旁白响应): 返回 0 条消息
